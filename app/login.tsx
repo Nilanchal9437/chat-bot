@@ -1,6 +1,17 @@
-import { useRouter } from 'expo-router';
+// @ts-nocheck
+// import CookieManager from '@react-native-cookies/cookies';
+import { useRouter } from "expo-router";
 import * as React from "react";
-import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import InstagramLogin from "react-native-instagram-login";
 import { Avatar, Button, Card, Text, TextInput } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -9,9 +20,24 @@ export default function LoginScreen() {
   const [password, setPassword] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
   const router = useRouter();
+  const insRef = React.useRef(null);
+  const [token, setToken] = React.useState(null);
+
+  console.log("Redirect URI:", token);
+
+  const onClear = () => {
+  //   CookieManager.clearAll()
+  // .then((success) => {
+  //   console.log('CookieManager.clearAll =>', success);
+  //   setToken(null);
+  // });
+  };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={["top", "bottom"]}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: "#fff" }}
+      edges={["top", "bottom"]}
+    >
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -22,15 +48,24 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Image source={require("@/assets/images/login/logo.png")} style={styles.logo} />
+          <Image
+            source={require("@/assets/images/login/logo.png")}
+            style={styles.logo}
+          />
           <Text style={styles.title}>Auto DM Responder</Text>
           <Text style={styles.subtitle}>For WhatsApp & Instagram</Text>
 
           <View style={{ marginTop: 32, width: "100%" }}>
             <Text style={styles.sectionTitle}>Welcome back</Text>
-            <Text style={styles.sectionSubtitle}>Log in to your account to manage your auto responses</Text>
+            <Text style={styles.sectionSubtitle}>
+              Log in to your account to manage your auto responses
+            </Text>
           </View>
-
+          <View>
+            <TouchableOpacity onPress={() => onClear()}>
+              <Text style={styles.forgot}>Logout</Text>
+            </TouchableOpacity>
+          </View>
           <View style={{ width: "100%", marginTop: 24 }}>
             <Text style={styles.inputLabel}>Email address</Text>
             <TextInput
@@ -49,7 +84,7 @@ export default function LoginScreen() {
           <View style={{ width: "100%", marginTop: 12 }}>
             <View style={styles.passwordRow}>
               <Text style={styles.inputLabel}>Password</Text>
-              <TouchableOpacity onPress={() => router.push('/forget-password')}>
+              <TouchableOpacity onPress={() => router.push("/forget-password")}>
                 <Text style={styles.forgot}>Forgot password?</Text>
               </TouchableOpacity>
             </View>
@@ -59,7 +94,12 @@ export default function LoginScreen() {
               value={password}
               onChangeText={setPassword}
               left={<TextInput.Icon icon="lock-outline" />}
-              right={<TextInput.Icon icon={showPassword ? "eye-off-outline" : "eye-outline"} onPress={() => setShowPassword(!showPassword)} />}
+              right={
+                <TextInput.Icon
+                  icon={showPassword ? "eye-off-outline" : "eye-outline"}
+                  onPress={() => setShowPassword(!showPassword)}
+                />
+              }
               style={styles.input}
               outlineColor="#E5E7EB"
               activeOutlineColor="#5D5FEF"
@@ -71,7 +111,9 @@ export default function LoginScreen() {
             style={styles.loginBtn}
             contentStyle={{ height: 48 }}
             labelStyle={{ fontSize: 18 }}
-            onPress={() => { router.push("/choose-plan")}}
+            onPress={() => {
+              router.push("/choose-plan");
+            }}
           >
             Log in
           </Button>
@@ -80,26 +122,54 @@ export default function LoginScreen() {
             <View style={styles.platformsRow}>
               <Card style={styles.platformCard} elevation={0}>
                 <View style={styles.platformContent}>
-                  <Avatar.Icon size={36} icon="whatsapp" color="#25D366" style={{ backgroundColor: '#E9FDF2' }} />
+                  <Avatar.Icon
+                    size={36}
+                    icon="whatsapp"
+                    color="#25D366"
+                    style={{ backgroundColor: "#E9FDF2" }}
+                  />
                   <Text style={styles.platformText}>WhatsApp</Text>
                 </View>
               </Card>
-              <Card style={[styles.platformCard, { borderColor: '#E5D4FA' }]} elevation={0}>
+              <Card
+                style={[styles.platformCard, { borderColor: "#E5D4FA" }]}
+                elevation={0}
+                onPress={() => insRef.current.show()}
+              >
                 <View style={styles.platformContent}>
-                  <Avatar.Icon size={36} icon="instagram" color="#C13584" style={{ backgroundColor: '#F7E9F9' }} />
-                  <Text style={[styles.platformText, { color: '#A259C6' }]}>Instagram</Text>
+                  <Avatar.Icon
+                    size={36}
+                    icon="instagram"
+                    color="#C13584"
+                    style={{ backgroundColor: "#F7E9F9" }}
+                  />
+                  <Text style={[styles.platformText, { color: "#A259C6" }]}>
+                    Instagram
+                  </Text>
                 </View>
               </Card>
             </View>
           </View>
           <View style={styles.signupRow}>
             <Text style={styles.signupText}>Don&apos;t have an account?</Text>
-            <TouchableOpacity onPress={() => router.replace('/signup')}>
+            <TouchableOpacity onPress={() => router.replace("/signup")}>
               <Text style={styles.signupLink}>Sign up</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <InstagramLogin
+        ref={insRef}
+        appId={`${process.env.INSTAGRAM_APP_ID}`}
+        appSecret={`${process.env.INSTAGRAM_APP_SECRET}`}
+        redirectUrl="https://auth.expo.io/@nilanchal/chat-bot-app"
+        scopes={[
+          "instagram_business_basic",
+          "instagram_business_manage_messages",
+        ]}
+        onLoginSuccess={(token: any) => setToken(token)}
+        onLoginFailure={(data: any) => console.log(data)}
+      />
     </SafeAreaView>
   );
 }
@@ -109,7 +179,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     paddingHorizontal: 20,
     paddingTop: 24,
-    minHeight: '100%',
+    minHeight: "100%",
   },
   logo: {
     width: 64,
@@ -217,4 +287,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textDecorationLine: "underline",
   },
-}); 
+});
